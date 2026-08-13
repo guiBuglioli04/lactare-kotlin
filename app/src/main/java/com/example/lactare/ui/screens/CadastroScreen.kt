@@ -10,26 +10,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.lactare.model.Nutriz
+import com.example.lactare.ui.components.InputField
+import com.example.lactare.ui.components.PageScaffold
+import com.example.lactare.ui.components.PrimaryButton
+import com.example.lactare.ui.components.SecondaryButton
+import com.example.lactare.ui.components.SectionCard
 import com.example.lactare.ui.components.Stepper
 
 @Composable
@@ -39,67 +41,63 @@ fun CadastroScreen(
 ) {
     var step by remember { mutableStateOf(1) }
     var nutriz by remember { mutableStateOf(Nutriz()) }
-
     val estados = listOf("SP", "RJ", "MG", "PR", "RS")
     var expandedEstado by remember { mutableStateOf(false) }
 
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Stepper(currentStep = step)
-            Spacer(Modifier.height(16.dp))
+    PageScaffold(
+        title = "Cadastro de doadora",
+        subtitle = "Fluxo em 4 etapas para concluir o registro"
+    ) { innerModifier ->
+        Column(
+            modifier = innerModifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            SectionCard {
+                Stepper(currentStep = step)
+            }
 
             when (step) {
-                1 -> {
-                    Text("Vamos começar! 💙", style = MaterialTheme.typography.headlineSmall)
-                    Text("Conte um pouco sobre você")
-                    Spacer(Modifier.height(12.dp))
-
-                    OutlinedTextField(
+                1 -> SectionCard(
+                    title = "Dados pessoais",
+                    subtitle = "Conte um pouco sobre você"
+                ) {
+                    InputField(
                         value = nutriz.nomeCompleto,
                         onValueChange = { nutriz = nutriz.copy(nomeCompleto = it) },
-                        label = { Text("Nome completo") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = "Nome completo"
                     )
-                    Spacer(Modifier.height(8.dp))
-
-                    OutlinedTextField(
+                    InputField(
                         value = nutriz.email,
                         onValueChange = { nutriz = nutriz.copy(email = it) },
-                        label = { Text("E-mail") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = "E-mail"
                     )
-                    Spacer(Modifier.height(8.dp))
-
-                    OutlinedTextField(
+                    InputField(
                         value = nutriz.telefone,
                         onValueChange = { nutriz = nutriz.copy(telefone = it) },
-                        label = { Text("Telefone") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = "Telefone",
+                        supportingText = "Inclua DDD para facilitar contato"
                     )
                 }
 
-                2 -> {
-                    Text("Onde você está?", style = MaterialTheme.typography.headlineSmall)
-                    Text("Precisamos saber sua localização para te ajudar melhor")
-                    Spacer(Modifier.height(12.dp))
-
-                    OutlinedTextField(
+                2 -> SectionCard(
+                    title = "Localização",
+                    subtitle = "Esses dados ajudam a conectar você ao banco mais próximo"
+                ) {
+                    InputField(
                         value = nutriz.cep,
                         onValueChange = { nutriz = nutriz.copy(cep = it) },
-                        label = { Text("CEP") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = "CEP"
                     )
-                    Spacer(Modifier.height(8.dp))
 
                     Box {
-                        OutlinedTextField(
-                            value = nutriz.estado,
+                        InputField(
+                            value = nutriz.estado.ifBlank { "Selecionar" },
                             onValueChange = {},
+                            label = "Estado",
                             readOnly = true,
-                            label = { Text("Estado") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { expandedEstado = true }
+                            modifier = Modifier.clickable { expandedEstado = true }
                         )
 
                         DropdownMenu(
@@ -118,39 +116,31 @@ fun CadastroScreen(
                         }
                     }
 
-                    Spacer(Modifier.height(8.dp))
-
-                    OutlinedTextField(
+                    InputField(
                         value = nutriz.cidade,
                         onValueChange = { nutriz = nutriz.copy(cidade = it) },
-                        label = { Text("Cidade") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = "Cidade"
                     )
-                    Spacer(Modifier.height(8.dp))
-
-                    OutlinedTextField(
+                    InputField(
                         value = nutriz.bairro,
                         onValueChange = { nutriz = nutriz.copy(bairro = it) },
-                        label = { Text("Bairro") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = "Bairro"
                     )
                 }
 
-                3 -> {
-                    Text("Como você prefere contribuir?", style = MaterialTheme.typography.headlineSmall)
-                    Text("Selecione uma ou mais opções")
-                    Spacer(Modifier.height(12.dp))
-
+                3 -> SectionCard(
+                    title = "Preferências de contribuição",
+                    subtitle = "Selecione uma ou mais opções"
+                ) {
                     val opcoes = listOf(
                         "Tenho leite excedente para doar agora",
                         "Quero ser avisada quando minha contribuição for necessária"
                     )
 
                     opcoes.forEach { opcao ->
-                        Card(
+                        SectionCard(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 6.dp)
                                 .toggleable(
                                     value = nutriz.disponibilidade.contains(opcao),
                                     onValueChange = {
@@ -160,56 +150,63 @@ fun CadastroScreen(
                                     }
                                 )
                         ) {
-                            Text(opcao, modifier = Modifier.padding(16.dp))
+                            Text(opcao, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }
 
-                4 -> {
-                    Text("Consentimento e Finalização", style = MaterialTheme.typography.headlineSmall)
-                    Spacer(Modifier.height(12.dp))
-
-                    Row {
+                4 -> SectionCard(
+                    title = "Consentimento",
+                    subtitle = "Confirme os termos para finalizar"
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
                             checked = nutriz.consentimento,
                             onCheckedChange = { nutriz = nutriz.copy(consentimento = it) }
                         )
-                        Text("Concordo com os termos e autorizo uso dos dados para contato.")
+                        Text(
+                            text = "Concordo com os termos e autorizo uso dos dados para contato.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 6.dp)
+                        )
                     }
 
-                    Spacer(Modifier.height(12.dp))
-                    Text("Resumo: ${nutriz.nomeCompleto} • ${nutriz.cidade}/${nutriz.estado}")
+                    Text(
+                        text = "Resumo",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Text(
+                        text = "${nutriz.nomeCompleto.ifBlank { "Nome não informado" }} • ${nutriz.cidade.ifBlank { "Cidade" }}/${nutriz.estado.ifBlank { "UF" }}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                OutlinedButton(
+                SecondaryButton(
+                    text = "Voltar",
                     onClick = { if (step > 1) step-- },
-                    enabled = step > 1
-                ) {
-                    Text("Voltar")
-                }
-
-                Button(
-                    onClick = {
-                        if (step < 4) step++ else onGoBancos()
-                    }
-                ) {
-                    Text(if (step < 4) "Próximo" else "Finalizar cadastro")
-                }
+                    enabled = step > 1,
+                    modifier = Modifier.weight(1f)
+                )
+                PrimaryButton(
+                    text = if (step < 4) "Próximo" else "Finalizar cadastro",
+                    onClick = { if (step < 4) step++ else onGoBancos() },
+                    modifier = Modifier.weight(1f)
+                )
             }
 
-            TextButton(
+            SecondaryButton(
+                text = "Ir para área admin (demo)",
                 onClick = onGoDashboard,
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Ir para área admin (demo)")
-            }
+            )
         }
     }
 }
