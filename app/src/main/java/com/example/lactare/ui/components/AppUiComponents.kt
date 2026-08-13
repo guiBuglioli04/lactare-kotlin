@@ -19,7 +19,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedButtonDefaults
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -137,8 +137,12 @@ fun SecondaryButton(
         enabled = enabled,
         modifier = modifier.heightIn(min = 48.dp),
         shape = RoundedCornerShape(14.dp),
-        colors = OutlinedButtonDefaults.colors(contentColor = MaterialTheme.colorScheme.onSurface),
-        border = OutlinedButtonDefaults.outlinedButtonBorder.copy(width = 1.dp)
+        // 1. Alterado para ButtonDefaults
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        // 2. Alterado para BorderStroke
+        border = BorderStroke(1.dp, BorderSubtle)
     ) {
         Text(text)
     }
