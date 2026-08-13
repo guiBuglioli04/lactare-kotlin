@@ -14,28 +14,33 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.lactare.data.mock.MockData
 import com.example.lactare.model.BancoDeLeite
+import com.example.lactare.ui.components.InputField
 import com.example.lactare.ui.components.LactareHeader
 import com.example.lactare.ui.components.OpenBadge
+import com.example.lactare.ui.components.PageScaffold
+import com.example.lactare.ui.components.PrimaryButton
+import com.example.lactare.ui.components.SecondaryButton
+import com.example.lactare.ui.components.SectionCard
+import com.example.lactare.ui.components.StatusChip
 
 @Composable
 fun BancosScreen(
-    onBack: () -> Unit = {}, // <-- Parâmetro adicionado aqui
+    onBack: () -> Unit = {},
     onGoCadastro: () -> Unit = {},
     onGoChat: () -> Unit = {},
     onGoDashboard: () -> Unit = {}
@@ -50,36 +55,37 @@ fun BancosScreen(
         }
         .sortedBy { it.distanciaKm }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        LactareHeader(
-            onBancos = {},
-            onCadastro = onGoCadastro,
-            onAdmin = onGoDashboard
-        )
-
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .padding(16.dp)
+    PageScaffold(
+        title = "Bancos de leite",
+        subtitle = "Encontre a unidade ideal para doação"
+    ) { innerModifier ->
+        Column(
+            modifier = innerModifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                OutlinedTextField(
-                    value = busca,
-                    onValueChange = { busca = it },
-                    label = { Text("Buscar por CEP ou bairro") },
-                    modifier = Modifier.fillMaxWidth()
+            SectionCard {
+                LactareHeader(
+                    onInicio = onBack,
+                    onBancos = {},
+                    onCadastro = onGoCadastro,
+                    onAdmin = onGoDashboard,
+                    selected = "bancos"
                 )
 
-                Spacer(Modifier.height(8.dp))
+                InputField(
+                    value = busca,
+                    onValueChange = { busca = it },
+                    label = "Buscar por endereço, CEP ou bairro"
+                )
 
                 Box {
-                    OutlinedTextField(
-                        value = "Ordenar por: $sortOption",
+                    InputField(
+                        value = "Ordenação: $sortOption",
                         onValueChange = {},
+                        label = "Ordenar",
                         readOnly = true,
                         modifier = Modifier.fillMaxWidth()
                     )
-
                     DropdownMenu(
                         expanded = expandedSort,
                         onDismissRequest = { expandedSort = false }
@@ -92,78 +98,96 @@ fun BancosScreen(
                             }
                         )
                     }
-
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .padding(end = 40.dp)
-                            .background(androidx.compose.ui.graphics.Color.Transparent)
-                    )
                 }
 
-                Spacer(Modifier.height(10.dp))
-                Button(onClick = { expandedSort = true }) {
-                    Text("Selecionar ordenação")
-                }
+                SecondaryButton(
+                    text = "Selecionar ordenação",
+                    onClick = { expandedSort = true }
+                )
+            }
 
-                Spacer(Modifier.height(10.dp))
-
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(modifier = Modifier.weight(1f)) {
+                LazyColumn(
+                    modifier = Modifier.weight(1.25f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     items(bancosFiltrados) { banco ->
                         BancoCard(banco = banco)
                     }
                 }
-            }
 
-            Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(12.dp))
 
-            Card(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Mapa Interativo", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(10.dp))
+                SectionCard(
+                    title = "Mapa (simulado)",
+                    subtitle = "Visualização rápida da cobertura",
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(androidx.compose.ui.graphics.Color(0xFFE5F3FF))
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(16.dp)
                     ) {
                         Text(
-                            "Simulação de mapa com marcadores\n• Eurofarma (1.2 km) selecionado",
-                            modifier = Modifier.padding(16.dp)
+                            text = "Marcadores ativos:\n• Eurofarma (1.2 km)\n• Hospital São Paulo (3.5 km)\n• HC (5.1 km)",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
             }
-        }
 
-        Button(
-            onClick = onGoChat,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text("Abrir Lactare Connect")
+            PrimaryButton(
+                text = "Abrir Lactare Connect",
+                onClick = onGoChat,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
 
 @Composable
 private fun BancoCard(banco: BancoDeLeite) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+    SectionCard(modifier = Modifier.fillMaxWidth()) {
+        Text(banco.nome, style = MaterialTheme.typography.titleMedium)
+        Text(
+            "${banco.endereco}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(banco.nome, style = MaterialTheme.typography.titleMedium)
-            Text("Endereço: ${banco.endereco}")
-            Text("Horário: ${banco.horario}")
-            Text("Tel: ${banco.telefone}")
-            if (banco.abertoAgora) OpenBadge()
-            Text("Distância: ${banco.distanciaKm} km")
-            Button(onClick = {}) { Text("Entrar em contato") }
+            if (banco.abertoAgora) {
+                OpenBadge()
+            } else {
+                StatusChip(
+                    label = "Fechado",
+                    background = Color(0xFF403137),
+                    foreground = Color(0xFFFFB3BE)
+                )
+            }
+            StatusChip(
+                label = "${banco.distanciaKm} km",
+                background = MaterialTheme.colorScheme.surfaceVariant,
+                foreground = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+
+        Text("Horário: ${banco.horario}", style = MaterialTheme.typography.bodySmall)
+        Text("Telefone: ${banco.telefone}", style = MaterialTheme.typography.bodySmall)
+
+        PrimaryButton(
+            text = "Entrar em contato",
+            onClick = {},
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
