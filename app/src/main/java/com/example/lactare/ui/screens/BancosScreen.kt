@@ -14,10 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,18 +26,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.lactare.data.mock.MockData
 import com.example.lactare.model.BancoDeLeite
+import com.example.lactare.ui.components.DropdownField
 import com.example.lactare.ui.components.InputField
 import com.example.lactare.ui.components.LactareHeader
 import com.example.lactare.ui.components.OpenBadge
 import com.example.lactare.ui.components.PageScaffold
 import com.example.lactare.ui.components.PrimaryButton
-import com.example.lactare.ui.components.SecondaryButton
 import com.example.lactare.ui.components.SectionCard
 import com.example.lactare.ui.components.StatusChip
+
+private enum class SortOption(val label: String) {
+    DISTANCIA("Mais próximo"),
+    NOME("Por nome (A-Z)"),
+    ABERTO("Aberto agora primeiro")
+}
 
 @Composable
 fun BancosScreen(
@@ -46,18 +54,55 @@ fun BancosScreen(
     onGoDashboard: () -> Unit = {}
 ) {
     var busca by remember { mutableStateOf("") }
-    var expandedSort by remember { mutableStateOf(false) }
-    var sortOption by remember { mutableStateOf("Mais próximo") }
+    var sortOption by remember { mutableStateOf(SortOption.DISTANCIA) }
+    var bancoSelecionado by remember { mutableStateOf<BancoDeLeite?>(null) }
 
     val bancosFiltrados = MockData.bancosDeLeite
         .filter {
-            busca.isBlank() || it.endereco.contains(busca, ignoreCase = true) || it.nome.contains(busca, ignoreCase = true)
+            busca.isBlank() ||
+                    it.endereco.contains(busca, ignoreCase = true) ||
+                    it.nome.contains(busca, ignoreCase = true)
         }
-        .sortedBy { it.distanciaKm }
+        .let { list ->
+            when (sortOption) {
+                SortOption.DISTANCIA -> list.sortedBy { it.distanciaKm }
+                SortOption.NOME -> list.sortedBy { it.nome }
+                SortOption.ABERTO -> list.sortedByDescending { it.abertoAgora }
+            }
+        }
+
+    // Dialog de contato
+    if (bancoSelecionado != null) {
+        val banco = bancoSelecionado!!
+        AlertDialog(
+            onDismissRequest = { bancoSelecionado = null },
+            title = { Text(banco.nome) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("📍 ${banco.endereco}", style = MaterialTheme.typography.bodyMedium)
+                    Text("📞 ${banco.telefone}", style = MaterialTheme.typography.bodyMedium)
+                    Text("🕐 ${banco.horario}", style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = if (banco.abertoAgora) "✅ Aberto agora" else "🔴 Fechado no momento",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (banco.abertoAgora) Color(0xFF92D8AF) else Color(0xFFFFB3BE)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { bancoSelecionado = null }) {
+                    Text("Fechar")
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
 
     PageScaffold(
         title = "Bancos de leite",
-        subtitle = "Encontre a unidade ideal para doação"
+        subtitle = "Encontre a unidade ideal para doação",
+        onBack = onBack
     ) { innerModifier ->
         Column(
             modifier = innerModifier.fillMaxSize(),
@@ -65,7 +110,7 @@ fun BancosScreen(
         ) {
             SectionCard {
                 LactareHeader(
-                    onInicio = onBack,
+                    onInicio = onGoCadastro,
                     onBancos = {},
                     onCadastro = onGoCadastro,
                     onAdmin = onGoDashboard,
@@ -75,34 +120,15 @@ fun BancosScreen(
                 InputField(
                     value = busca,
                     onValueChange = { busca = it },
-                    label = "Buscar por endereço, CEP ou bairro"
+                    label = "Buscar por nome, endereço ou bairro"
                 )
 
-                Box {
-                    InputField(
-                        value = "Ordenação: $sortOption",
-                        onValueChange = {},
-                        label = "Ordenar",
-                        readOnly = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    DropdownMenu(
-                        expanded = expandedSort,
-                        onDismissRequest = { expandedSort = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Mais próximo") },
-                            onClick = {
-                                sortOption = "Mais próximo"
-                                expandedSort = false
-                            }
-                        )
-                    }
-                }
-
-                SecondaryButton(
-                    text = "Selecionar ordenação",
-                    onClick = { expandedSort = true }
+                DropdownField(
+                    value = sortOption.label,
+                    label = "Ordenação",
+                    options = SortOption.entries,
+                    onSelect = { sortOption = it },
+                    optionLabel = { it.label }
                 )
             }
 
@@ -112,15 +138,37 @@ fun BancosScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(bancosFiltrados) { banco ->
-                        BancoCard(banco = banco)
+                        BancoCard(
+                            banco = banco,
+                            onContato = { bancoSelecionado = banco }
+                        )
+                    }
+
+                    if (bancosFiltrados.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(0.4f))
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "Nenhum banco encontrado para \"$busca\"",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
                 }
 
                 Spacer(Modifier.width(12.dp))
 
                 SectionCard(
-                    title = "Mapa (simulado)",
-                    subtitle = "Visualização rápida da cobertura",
+                    title = "Mapa da cobertura",
+                    subtitle = "Visualização rápida",
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
@@ -129,14 +177,45 @@ fun BancosScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                             .padding(16.dp)
                     ) {
-                        Text(
-                            text = "Marcadores ativos:\n• Eurofarma (1.2 km)\n• Hospital São Paulo (3.5 km)\n• HC (5.1 km)",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(
+                                text = "Marcadores ativos",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            bancosFiltrados.forEach { banco ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(
+                                                if (banco.abertoAgora) Color(0xFF213D30)
+                                                else MaterialTheme.colorScheme.surfaceVariant
+                                            )
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            "${banco.distanciaKm} km",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = if (banco.abertoAgora) Color(0xFF92D8AF)
+                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Text(
+                                        text = banco.nome.substringAfter("Banco de Leite ").take(24),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -151,11 +230,11 @@ fun BancosScreen(
 }
 
 @Composable
-private fun BancoCard(banco: BancoDeLeite) {
+private fun BancoCard(banco: BancoDeLeite, onContato: () -> Unit) {
     SectionCard(modifier = Modifier.fillMaxWidth()) {
         Text(banco.nome, style = MaterialTheme.typography.titleMedium)
         Text(
-            "${banco.endereco}",
+            banco.endereco,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -181,12 +260,12 @@ private fun BancoCard(banco: BancoDeLeite) {
             )
         }
 
-        Text("Horário: ${banco.horario}", style = MaterialTheme.typography.bodySmall)
-        Text("Telefone: ${banco.telefone}", style = MaterialTheme.typography.bodySmall)
+        Text("🕐 ${banco.horario}", style = MaterialTheme.typography.bodySmall)
+        Text("📞 ${banco.telefone}", style = MaterialTheme.typography.bodySmall)
 
         PrimaryButton(
-            text = "Entrar em contato",
-            onClick = {},
+            text = "Ver detalhes e contato",
+            onClick = onContato,
             modifier = Modifier.fillMaxWidth()
         )
     }

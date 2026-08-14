@@ -1,9 +1,11 @@
 package com.example.lactare.ui.components
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,19 +27,26 @@ fun LactareHeader(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "Lactare",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.weight(1f)
+            color = MaterialTheme.colorScheme.primary
         )
-        NavTextAction("Início", selected == "inicio", onInicio)
-        NavTextAction("Como doar", selected == "doar", onComoDoar)
-        NavTextAction("Bancos", selected == "bancos", onBancos)
-        NavTextAction("Cadastro", selected == "cadastro", onCadastro)
-        NavTextAction("Admin", selected == "admin", onAdmin)
+
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            NavTextAction("Início", selected == "inicio", onInicio)
+            NavTextAction("Como doar", selected == "doar", onComoDoar)
+            NavTextAction("Bancos", selected == "bancos", onBancos)
+            NavTextAction("Cadastro", selected == "cadastro", onCadastro)
+            NavTextAction("Admin", selected == "admin", onAdmin)
+        }
     }
 }

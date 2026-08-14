@@ -26,18 +26,26 @@ fun LactareNavHost() {
 
         composable(Routes.Bancos.route) {
             BancosScreen(
-                onGoCadastro = { navController.navigate(Routes.Cadastro.route) },
+                onBack = { navController.popBackStack() },
+                onGoCadastro = {
+                    navController.navigate(Routes.Cadastro.route) {
+                        popUpTo(Routes.Cadastro.route) { inclusive = true }
+                    }
+                },
                 onGoChat = { navController.navigate(Routes.Chat.route) },
                 onGoDashboard = { navController.navigate(Routes.Dashboard.route) }
             )
         }
 
         composable(Routes.Chat.route) {
-            ChatScreen()
+            ChatScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.Dashboard.route) {
             DashboardScreen(
+                onBack = { navController.popBackStack() },
                 onGoBancos = { navController.navigate(Routes.Bancos.route) }
             )
         }
