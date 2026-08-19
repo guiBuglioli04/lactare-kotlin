@@ -62,7 +62,6 @@ fun Stepper(currentStep: Int, totalSteps: Int = 4) {
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Border ring for active step
                     if (active) {
                         Box(
                             modifier = Modifier

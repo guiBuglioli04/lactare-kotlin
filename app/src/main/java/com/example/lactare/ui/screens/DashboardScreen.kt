@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -79,13 +80,15 @@ fun DashboardScreen(
         ) {
             // ── Métricas ──────────────────────────────────────────────
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                MetricCard("12.543", "Nutrizes cadastradas", "+12%", Modifier.weight(1f))
-                MetricCard("8.920L", "Litros doados", "+18%", Modifier.weight(1f))
-                MetricCard("45.200", "Bebês beneficiados", "+24%", Modifier.weight(1f))
-                MetricCard("68%", "Conversão", "+5%", Modifier.weight(1f))
+                MetricCard("12.543", "Nutrizes cadastradas", "+12%", Modifier.weight(1f).fillMaxHeight())
+                MetricCard("8.920L", "Litros doados", "+18%", Modifier.weight(1f).fillMaxHeight())
+                MetricCard("45.200", "Bebês beneficiados", "+24%", Modifier.weight(1f).fillMaxHeight())
+                MetricCard("68%", "Conversão", "+5%", Modifier.weight(1f).fillMaxHeight())
             }
 
             // ── Linha principal: Sidebar + Campanhas ──────────────────
@@ -240,21 +243,17 @@ private fun CampanhaRow(campanha: Campanha) {
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
             .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(campanha.nome, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Alcance: ${campanha.alcance} • Conversão: ${campanha.conversao}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(Modifier.width(12.dp))
+            Text(campanha.nome, style = MaterialTheme.typography.titleMedium)
             StatusBadge(campanha.status)
+            Text(
+                "Alcance: ${campanha.alcance} • Conversão: ${campanha.conversao}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

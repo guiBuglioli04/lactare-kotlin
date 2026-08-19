@@ -66,12 +66,10 @@ fun CadastroScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // ── Stepper ──────────────────────────────────────────────
             SectionCard {
                 Stepper(currentStep = step)
             }
 
-            // ── Conteúdo por etapa ────────────────────────────────────
             when (step) {
                 1 -> SectionCard(
                     title = "Dados pessoais",
@@ -232,7 +230,6 @@ fun CadastroScreen(
 
                     Spacer(Modifier.height(4.dp))
 
-                    // Checkbox de consentimento
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -269,7 +266,6 @@ fun CadastroScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // ── Botões de navegação ───────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)

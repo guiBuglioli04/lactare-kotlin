@@ -71,7 +71,6 @@ fun BancosScreen(
             }
         }
 
-    // Dialog de contato
     if (bancoSelecionado != null) {
         val banco = bancoSelecionado!!
         AlertDialog(

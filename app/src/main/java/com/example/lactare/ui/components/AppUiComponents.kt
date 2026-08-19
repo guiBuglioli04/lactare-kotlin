@@ -238,9 +238,7 @@ fun InputField(
     )
 }
 
-/**
- * Dropdown field que usa ExposedDropdownMenuBox — sem bugs de toque em readOnly.
- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> DropdownField(
